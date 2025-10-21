@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold">Tutor de Estudo</h2>
+  </div>
+
+  <div class="card mt-4">
+    <h3 class="font-semibold mb-2">Importar PDF</h3>
+    <input id="pdf_file_tutor" type="file" accept="application/pdf" class="input" />
+    <button class="btn btn-ghost mt-2" onclick="uploadPdfTutor()">Ler PDF</button>
+    <p id="pdf_msg_tutor" class="text-sm text-gray-600 mt-1"></p>
+  </div>
+
+  <div class="card mt-4">
+    <form action="/tutor/upload" method="post" enctype="multipart/form-data" class="space-y-2">
+      <input class="input" name="title" placeholder="Título" />
+      <textarea id="input_text_tutor" class="input h-48" name="text" placeholder="Cole o conteúdo aqui"></textarea>
+      <button class="btn btn-ghost mt-2">Enviar</button>
+    </form>
+  </div>
+
+  <div class="card mt-4">
+    <h2 class="text-xl font-semibold mb-2">Seus Documentos</h2>
+    <ul class="space-y-8">
+      {% for d in docs %}
+      <li><a href="/tutor/doc/{{ d.id }}" class="btn btn-ghost">Abrir Quizz</a> {{ d.title }} - {{ d.created_at }}</li>
+      {% else %}
+      <li>Nenhum documento ainda.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+
+</div>
+{% endblock %}

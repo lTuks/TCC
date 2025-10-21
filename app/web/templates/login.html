@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card max-w-md mx-auto">
+  <h2 class="text-xl font-semibold mb-4">Entrar</h2>
+  <div class="space-y-3">
+    <input id="login_email" class="input" placeholder="E-mail" type="email" />
+    <input id="login_pass" class="input" placeholder="Senha" type="password" />
+    <button class="btn btn-primary w-full" onclick="login()">Entrar</button>
+    <p class="text-sm text-gray-600">Ainda não tem conta? <a class="text-indigo-600" href="/ui/register">Cadastre-se</a>.</p>
+  </div>
+  <p id="login_msg" class="text-sm text-red-600 mt-3"></p>
+</div>
+{% endblock %}

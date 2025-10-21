@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-semibold">Prova — {{ doc.title }}</h1>
+  </div>
+  <p class="text-sm text-gray-500">Tipo: {{ quiz.quiz_type }}</p>
+
+  <div class="card mt-4">
+    <form action="/tutor/quiz/{{ quiz.id }}/submit" method="post">
+      {% for it in items %}
+      <div class="card mt-3">
+        <div class="font-medium mb-1">Q{{ loop.index }}. {{ it.question }}</div>
+    
+        {% if it.type == 'vf' %}
+        <label><input type="radio" name="q_{{ loop.index0 }}" value="true"> Verdadeiro</label>
+        <label class="ml-3"><input type="radio" name="q_{{ loop.index0 }}" value="false"> Falso</label>
+    
+        {% elif it.type == 'mc' %}
+        {% set qidx = loop.index0 %}
+        {% for opt in it.options %}
+        <div>
+          <label>
+            <input type="radio" name="q_{{ qidx }}" value="{{ loop.index0 }}">
+            {{ ('ABCD'[loop.index0]) if loop.index0 < 4 else '?' }}) {{ opt }} </label>
+        </div>
+        {% endfor %}
+    
+        {% elif it.type == 'disc' %}
+        <textarea name="q_{{ loop.index0 }}" class="input h-48" placeholder="Sua resposta..."></textarea>
+        {% if it.rubric %}
+        <div class="text-xs text-gray-600 mt-1">Rubrica: {{ ", ".join(it.rubric) }}</div>
+        {% endif %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    
+      <div class="card mt-4">
+        <button class="btn btn-ghost">Enviar prova</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

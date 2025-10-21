@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold">Plano de estudo - {{ doc.title }}</h2>
+    <a class="btn btn-ghost" href="/tutor/doc/{{ doc.id }}">Voltar</a>
+  </div>
+  
+  <div class="card mt-4">
+    <form method="post" class="flex gap-2 mt-2">
+      <label>Horas/semana <input class="input" type="number" name="horas_semanais" value="6" min="1"
+          style="width:6rem"></label>
+      <label>Semanas <input class="input" type="number" name="semanas" value="4" min="1" style="width:6rem"></label>
+      <button class="btn btn-ghost">Gerar/Atualizar</button>
+    </form>
+  </div>
+
+  <div class="card mt-4">
+    {% if plan %}
+      <article class="prose" style="white-space: pre-wrap">{{ plan.plan_md }}</article>
+    {% else %}
+      <p class="text-gray-600">Nenhum plano gerado ainda.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

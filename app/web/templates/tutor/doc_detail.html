@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold">{{ doc.title }}</h2>
+    <a class="btn btn-ghost" href="/tutor">Voltar</a>
+  </div>
+
+  <div class="card mt-4">
+    <h2 class="text-lg font-semibold">Resumo</h2>
+    <ol class="list-decimal pl-5">
+      {% for s in summary %}<li>{{ s }}</li>{% endfor %}
+    </ol>
+  </div>
+
+  <div class="card mt-4">
+    <h2 class="text-lg font-semibold">Plano de estudo & Provas</h2>
+    <div class="flex gap-3">
+      <a class="btn btn-ghost" href="/tutor/doc/{{ doc.id }}/study">Plano de Estudo</a>
+      <a class="btn btn-ghost" href="/tutor/doc/{{ doc.id }}/quiz">Provas</a>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <h2 class="text-lg font-semibold">Provas geradas neste tema</h2>
+    {% if quiz_stats %}
+    <div class="overflow-x-auto mt-2">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr>
+            <th class="text-left p-2">Criada em</th>
+            <th class="text-left p-2">Tipo</th>
+            <th class="text-left p-2"># Tentativas</th>
+            <th class="text-left p-2">Média</th>
+            <th class="text-left p-2">Melhor</th>
+            <th class="text-left p-2">Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in quiz_stats %}
+          <tr class="border-t">
+            <td class="p-2">{{ q.created_at }}</td>
+            <td class="p-2">{{ type_labels.get(q.quiz_type, q.quiz_type) }}</td>
+            <td class="p-2">{{ q.attempts }}</td>
+            <td class="p-2">{{ '%.1f' % q.avg_score }}/10</td>
+            <td class="p-2">{{ q.best_score }}/10</td>
+            <td class="p-2">
+              <a class="btn btn-ghost" href="/tutor/quiz/{{ q.quiz_id }}">Refazer</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-gray-600 mt-2">Nenhuma prova gerada ainda para este documento.</p>
+    {% endif %}
+  </div>
+
+  <div class="card mt-4">
+    <h2 class="text-lg font-semibold">Tentativas realizadas</h2>
+    {% if attempt_rows %}
+    <div class="overflow-x-auto mt-2">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr>
+            <th class="text-left p-2">Data</th>
+            <th class="text-left p-2">Tipo</th>
+            <th class="text-left p-2">Nota</th>
+            <th class="text-left p-2">Abrir</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in attempt_rows %}
+          <tr class="border-t">
+            <td class="p-2">{{ row.attempt_at }}</td>
+            <td class="p-2">{{ type_labels.get(row.quiz_type, row.quiz_type) }}</td>
+            <td class="p-2">{{ row.score }}/{{ row.max_score }}</td>
+            <td class="p-2">
+              <a class="btn btn-ghost" href="/tutor/quiz/{{ row.quiz_id }}">Ver prova</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-gray-600 mt-2">Nenhuma tentativa registrada ainda.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

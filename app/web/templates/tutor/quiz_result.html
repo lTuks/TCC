@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-semibold">Resultado</h1>
+    <a class="btn btn-ghost" href="/tutor">Voltar</a>
+  </div>
+ 
+  <p class="mt-1">Acertos: {{ correct }}/{{ total }} — Nota: <b>{{ score }}</b>/10</p>
+  
+  <div class="card mt-3">
+    <h2 class="text-lg font-semibold mb-2">Gabarito</h2>
+    <ol class="pl-6 list-decimal">
+      {% for it in items %}
+        <li class="mb-2">
+          <div class="font-medium">{{ it.question }}</div>
+          {% if it.type == 'vf' %}
+            <div>Sua resp.: {{ 'V' if answers[loop.index0] else 'F' if answers[loop.index0] is not none else '(em branco)' }}</div>
+            <div>Gabarito: {{ 'V' if it.answer else 'F' }}</div>
+
+          {% elif it.type == 'mc' %}
+            <div>Sua resp.: 
+              {% if answers[loop.index0] is not none %}
+                {{ ('ABCD'[answers[loop.index0]]) }}) {{ it.options[answers[loop.index0]] }}
+              {% else %}(em branco){% endif %}
+            </div>
+            <div>Gabarito: {{ ('ABCD'[it.answer]) }}) {{ it.options[it.answer] }}</div>
+
+          {% elif it.type == 'disc' %}
+            <div>Sua resposta:</div>
+            <div class="p-2 border rounded bg-gray-50" style="white-space: pre-wrap">{{ answers[loop.index0] }}</div>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title if title else "Assistente de Escrita" }}</title>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .card { @apply bg-white rounded-2xl shadow p-6; }
+      .btn { @apply px-4 py-2 rounded-xl shadow text-white; }
+      .btn-primary { @apply bg-indigo-600 hover:bg-indigo-700; }
+      .btn-ghost { @apply bg-gray-100 hover:bg-gray-200 text-gray-800; }
+      .input { @apply w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500; }
+      pre.diff { @apply whitespace-pre-wrap; }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gray-50">
+  <header class="bg-white shadow">
+    <nav class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="space-x-2" data-auth="in"></div>
+      <div class="space-x-2" data-auth="in">
+        <span id="auth_status" class="text-gray-600">Não autenticado</span>
+        <button class="btn btn-ghost ml-2" onclick="logout()">Sair</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8 justify-items-center">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+
+</html>

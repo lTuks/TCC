@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card max-w-md mx-auto">
+  <h2 class="text-xl font-semibold mb-4">Cadastrar</h2>
+  <div class="space-y-3">
+    <input id="reg_name" class="input" placeholder="Nome" />
+    <input id="reg_email" class="input" placeholder="E-mail" type="email" />
+    <input id="reg_pass" class="input" placeholder="Senha (mín. 6)" type="password" />
+    <button class="btn btn-primary w-full" onclick="registerUser()">Criar conta</button>
+  </div>
+  <p id="reg_msg" class="text-sm text-red-600 mt-3"></p>
+</div>
+{% endblock %}

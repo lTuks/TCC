@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-semibold">Gerar prova - {{ doc.title }}</h1>
+    <a class="btn btn-ghost" href="/tutor/doc/{{ doc.id }}">Voltar</a>
+  </div>
+  <div class="card mt-4">
+    <form action="/tutor/doc/{{ doc.id }}/quiz/create" method="post" class="flex gap-3 items-end">
+      <label>Tipo
+        <select class="input" name="tipo">
+          <option value="vf">Verdadeiro/Falso</option>
+          <option value="mc" selected>Alternativas</option>
+          <option value="disc">Discursivas</option>
+        </select>
+      </label>
+      <label>Qtd. questões <input class="input" type="number" min="3" max="30" value="10" name="n"
+          style="width:6rem"></label>
+      <button class="btn btn-ghost">Gerar</button>
+    </form>
+  </div>
+  
+</div>
+{% endblock %}
