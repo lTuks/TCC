@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 from pydantic import Field
 
 class Settings(BaseSettings):
-    app_name: str = "Assistente de Redação PT-BR"
+    app_name: str = "Tutor Virtual com Provas"
     app_env: str = Field("dev", alias="APP_ENV")
     secret_key: str = Field(default=None, alias="SECRET_KEY")
     access_token_expire_minutes: int = Field(120, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
