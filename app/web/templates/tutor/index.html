@@ -5,6 +5,7 @@
     <h2 class="text-xl font-semibold">Tutor de Estudo</h2>
   </div>
 
+  <!-- Importar PDF -->
   <div class="card mt-4">
     <h3 class="font-semibold mb-2">Importar PDF</h3>
     <input id="pdf_file_tutor" type="file" accept="application/pdf" class="input" />
@@ -12,25 +13,47 @@
     <p id="pdf_msg_tutor" class="text-sm text-gray-600 mt-1"></p>
   </div>
 
+  <!-- Form de criação manual de documento -->
   <div class="card mt-4">
-    <form action="/tutor/upload" method="post" enctype="multipart/form-data" class="space-y-2">
+    <form action="{{ request.url_for('upload') }}" method="post" enctype="multipart/form-data" class="space-y-2">
       <input class="input" name="title" placeholder="Título" />
       <textarea id="input_text_tutor" class="input h-48" name="text" placeholder="Cole o conteúdo aqui"></textarea>
       <button class="btn btn-ghost mt-2">Enviar</button>
     </form>
   </div>
 
+  <!-- Lista de documentos do usuário -->
   <div class="card mt-4">
     <h2 class="text-xl font-semibold mb-2">Seus Documentos</h2>
-    <ul class="space-y-8">
+
+    <ul class="space-y-4">
       {% for d in docs %}
-      <li><a href="/tutor/doc/{{ d.id }}" class="btn btn-ghost">Abrir Quizz</a> {{ d.title }} - {{ d.created_at }}</li>
+      <li class="flex items-center justify-between">
+        <div class="min-w-0">
+          <div class="font-medium truncate">{{ d.title }}</div>
+          <div class="text-sm text-gray-500">
+            {{ d.created_at if d.created_at else '' }}
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a class="btn btn-ghost"
+             href="{{ request.url_for('doc_detail', doc_id=d.id) }}">
+            Abrir documento
+          </a>
+          <a class="btn btn-ghost"
+             href="{{ request.url_for('study_get', doc_id=d.id) }}">
+            Plano de estudo
+          </a>
+          <a class="btn btn-ghost"
+             href="{{ request.url_for('quiz_select', doc_id=d.id) }}">
+            Criar prova
+          </a>
+        </div>
+      </li>
       {% else %}
       <li>Nenhum documento ainda.</li>
       {% endfor %}
     </ul>
   </div>
-
-
 </div>
 {% endblock %}

@@ -13,7 +13,3 @@ async def ui_home(request: Request):
 @router.get("/register", response_class=HTMLResponse)
 async def ui_register(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
-
-@router.get("/editor", response_class=HTMLResponse)
-async def ui_editor(request: Request):
-    return templates.TemplateResponse("editor.html", {"request": request})
