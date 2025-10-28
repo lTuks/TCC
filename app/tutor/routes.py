@@ -90,7 +90,10 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
             func.coalesce(func.max(QuizAttempt.score), 0).label("best_score"),
         )
         .outerjoin(QuizAttempt, QuizAttempt.quiz_id == Quiz.id)
-        .filter(Quiz.document_id == doc_id)
+        .filter(
+            Quiz.document_id == doc_id,
+            Quiz.owner_id == user.id,            # <<--- Filtro de dono
+        )
         .group_by(Quiz.id)
         .order_by(Quiz.created_at.desc())
         .all()
@@ -106,13 +109,16 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
             Quiz.id.label("quiz_id"),
         )
         .join(Quiz, Quiz.id == QuizAttempt.quiz_id)
-        .filter(Quiz.document_id == doc_id)  # <- idem
+        .filter(
+            Quiz.document_id == doc_id,
+            Quiz.owner_id == user.id,            # <<--- Filtro de dono
+            QuizAttempt.owner_id == user.id,     # <<--- Filtro de dono
+        )
         .order_by(QuizAttempt.created_at.desc())
         .all()
     )
 
     type_labels = {"vf": "Verdadeiro/Falso", "mc": "Alternativas", "disc": "Discursiva"}
-
     return templates.TemplateResponse(
         "tutor/doc_detail.html",
         {
@@ -127,19 +133,30 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
 
 # ----- Plano de estudo -----
 @router.get("/doc/{doc_id}/study", response_class=HTMLResponse)
-def study_get(request: Request, doc_id: int, db: Session = Depends(get_db), ):
-    doc = db.query(TutorDocument).get(doc_id)
-    if not doc: return RedirectResponse(url="/tutor", status_code=303)
-    plan = db.query(StudyPlan).filter(StudyPlan.document_id==doc_id).order_by(StudyPlan.created_at.desc()).first()
+def study_get(request: Request, doc_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user),):
+    doc = _get_doc_user_safe(db, user.id, doc_id)
+    if not doc:
+        return RedirectResponse(url="/tutor", status_code=303)
+    plan = (
+        db.query(StudyPlan)
+        .filter(
+            StudyPlan.document_id == doc_id,
+            StudyPlan.owner_id == user.id,
+        )
+        .order_by(StudyPlan.created_at.desc())
+        .first()
+    )
     return templates.TemplateResponse("tutor/study.html", {"request": request, "doc": doc, "plan": plan})
 
 @router.post("/doc/{doc_id}/study", response_class=HTMLResponse)
-def study_post(request: Request, doc_id: int, horas_semanais: int = Form(6), semanas: int = Form(4), db: Session = Depends(get_db), ):
-    doc = db.query(TutorDocument).get(doc_id)
-    if not doc: return RedirectResponse(url="/tutor", status_code=303)
+def study_post( request: Request, doc_id: int, horas_semanais: int = Form(6), semanas: int = Form(4), db: Session = Depends(get_db), user: User = Depends(get_current_user),):
+    doc = _get_doc_user_safe(db, user.id, doc_id)
+    if not doc:
+        return RedirectResponse(url="/tutor", status_code=303)
     md = create_study_plan_md(doc.content, horas_semanais=horas_semanais, semanas=semanas)
-    row = StudyPlan(document_id=doc_id, plan_md=md)
-    db.add(row); db.commit()
+    row = StudyPlan(document_id=doc_id, owner_id=user.id, plan_md=md)
+    db.add(row)
+    db.commit()
     return RedirectResponse(url=f"/tutor/doc/{doc_id}/study", status_code=303)
 
 # ----- Provas -----
