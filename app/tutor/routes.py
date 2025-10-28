@@ -156,12 +156,7 @@ def study_get(request: Request, doc_id: int,
     if plan:
         rendered_md = Markup(markdown.markdown(
             plan.plan_md,
-            extensions=[
-                "fenced_code",
-                "tables",
-                "toc",
-                "nl2br",
-            ]
+            extensions=[ "fenced_code", "tables", "toc", "nl2br", "codehilite"]
         ))
 
     return templates.TemplateResponse(
