@@ -10,7 +10,7 @@
     <div class="flex items-center gap-2">
       <h3 class="font-semibold mb-2">Importar PDF</h3>
       <div class="relative group cursor-pointer select-none">
-        <span class="text-blue-600 font-bold border border-blue-600 rounded-full px-[6px]">?</span>
+        <span class="text-black-600 font-bold border border-black-600 rounded-full px-[6px]">?</span>
         <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block
                     bg-gray-900 text-white text-xs p-2 rounded shadow-lg w-56 z-10">
           Use para importar o arquivo, que aparecerá no bloco abaixo em forma de texto.
@@ -24,11 +24,20 @@
 
   <!-- Form de criação manual de documento -->
   <div class="card mt-4">
+    <div class="flex items-center gap-2 mb-2">
+      <h3 class="font-semibold">Criar Documento</h3>
+        <div class="relative group cursor-pointer select-none">
+        <span class="text-black-600 font-bold border border-black-600 rounded-full px-[6px]">?</span>
+        <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block
+                    bg-gray-900 text-white text-xs p-2 rounded shadow-lg w-64 z-10">
+          Após enviar o conteúdo, você será redirecionado para a página de Resumo deste documento.
+        </div>
+      </div>
+    </div>
     <form action="{{ request.url_for('upload') }}" method="post" enctype="multipart/form-data" class="space-y-2">
       <input class="input" name="title" placeholder="Título" />
       <textarea id="input_text_tutor" class="input h-48" name="text" placeholder="Cole o conteúdo aqui"></textarea>
       <button class="btn btn-ghost mt-2">Enviar</button>
-      <p class="text-sm text-gray-500">Após enviar será redirecionado para a página do Resumo.</p>
     </form>
   </div>
 
