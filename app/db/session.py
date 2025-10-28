@@ -9,12 +9,11 @@ class Base(DeclarativeBase):
 # Pega variável de ambiente ou .env
 url = settings.database_url or os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
-# Corrige prefixo errado do Render
+# Corrige URLs do Render
 if url.startswith("postgres://"):
-    url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+    url = url.replace("postgres://", "postgresql+psycopg://", 1)
 elif url.startswith("postgresql://"):
-    # garante driver psycopg2
-    url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    url = url.replace("postgresql://", "postgresql+psycopg://", 1)
 
 # Definir connect_args apenas para SQLite
 connect_args = {}
