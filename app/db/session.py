@@ -1,21 +1,42 @@
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.config import settings
+import os
 
 class Base(DeclarativeBase):
     pass
 
+# Pega variável de ambiente ou .env
+url = settings.database_url or os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+# Corrige prefixo errado do Render
+if url.startswith("postgres://"):
+    url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif url.startswith("postgresql://"):
+    # garante driver psycopg2
+    url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+# Definir connect_args apenas para SQLite
+connect_args = {}
+if url.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
 engine = create_engine(
-    settings.database_url,
-    connect_args={"check_same_thread": False} if settings.database_url.startswith("sqlite") else {},
+    url,
+    connect_args=connect_args,
+    pool_pre_ping=True,
     future=True,
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    future=True,
+)
 
 def init_db():
     from app.models import user, document, usage_log, tutor
     Base.metadata.create_all(bind=engine)
 
-# Importa modelos do Tutor para create_all
 import app.models.tutor
