@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from app.models.tutor import TutorDocument, TutorChatMessage, StudyPlan, Quiz, QuizAttempt
 from app.models.user import User
 from app.tutor.study import create_study_plan_md, generate_quiz, grade_discursive_batch
+from app.llm.llm_gateway import summarize_to_bullets
+
 import json
 
 router = APIRouter(prefix="/tutor", tags=["tutor"])
@@ -76,7 +78,7 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
     if not doc:
         return RedirectResponse(url="/tutor", status_code=303)
 
-    summary = [t.strip() for t in doc.content.split(". ")[:5] if t.strip()]
+    summary = summarize_to_bullets(doc.content, bullets=10)
 
     quiz_stats = (
         db.query(
@@ -88,7 +90,7 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
             func.coalesce(func.max(QuizAttempt.score), 0).label("best_score"),
         )
         .outerjoin(QuizAttempt, QuizAttempt.quiz_id == Quiz.id)
-        .filter(Quiz.document_id == doc_id, Quiz.owner_id == user.id)
+        .filter(Quiz.document_id == doc_id)
         .group_by(Quiz.id)
         .order_by(Quiz.created_at.desc())
         .all()
@@ -104,16 +106,23 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
             Quiz.id.label("quiz_id"),
         )
         .join(Quiz, Quiz.id == QuizAttempt.quiz_id)
-        .filter(Quiz.document_id == doc_id, Quiz.owner_id == user.id, QuizAttempt.owner_id == user.id)
+        .filter(Quiz.document_id == doc_id)  # <- idem
         .order_by(QuizAttempt.created_at.desc())
         .all()
     )
 
     type_labels = {"vf": "Verdadeiro/Falso", "mc": "Alternativas", "disc": "Discursiva"}
+
     return templates.TemplateResponse(
         "tutor/doc_detail.html",
-        {"request": request, "doc": doc, "summary": summary,
-         "quiz_stats": quiz_stats, "attempt_rows": attempt_rows, "type_labels": type_labels},
+        {
+            "request": request,
+            "doc": doc,
+            "summary": summary,
+            "quiz_stats": quiz_stats,
+            "attempt_rows": attempt_rows,
+            "type_labels": type_labels,
+        },
     )
 
 # ----- Plano de estudo -----
