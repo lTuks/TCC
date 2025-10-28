@@ -58,7 +58,6 @@ def chat(system: str, user: str, temperature: float = 0.2) -> str:
     Comentários em PT-BR: função principal para prompts do app."""
     if _HAS_NEW:
         c = _client_new()
-        # caminho preferido em 1.x
         if hasattr(c, "chat") and hasattr(c.chat, "completions"):
             r = c.chat.completions.create(
                 model=CHAT_MODEL,
@@ -67,7 +66,6 @@ def chat(system: str, user: str, temperature: float = 0.2) -> str:
                 temperature=temperature,
             )
             return (r.choices[0].message.content or "").strip()
-        # fallback: Responses API (algumas versões)
         if hasattr(c, "responses"):
             r = c.responses.create(
                 model=CHAT_MODEL,
@@ -78,7 +76,6 @@ def chat(system: str, user: str, temperature: float = 0.2) -> str:
             return getattr(r, "output_text", "").strip()
         raise RuntimeError("SDK 1.x encontrado, mas sem chat.completions/responses.")
 
-    # API antiga 0.28.x
     if not _HAS_LEGACY:
         raise RuntimeError("Nenhum SDK OpenAI disponível. Instale conforme requirements.")
     _legacy.api_key = _api_key()
@@ -132,7 +129,6 @@ def summarize_to_bullets(text: str, bullets: int = 10) -> List[str]:
 
     try:
         content = chat(system=system, user=user_prompt, temperature=0.2)
-        # normaliza e extrai bullets, mesmo que venham com -, *, •, ou numerados
         lines = [l.strip() for l in content.splitlines() if l.strip()]
         out = []
         for l in lines:

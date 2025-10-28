@@ -22,7 +22,6 @@ class LLMClient:
             return r.json()
 
     async def _responses_api(self, messages):
-        # Responses API (recomendado)
         payload = {
             "model": self.model,
             "input": messages,
@@ -59,14 +58,12 @@ class LLMClient:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ]
-            # 1) tenta Responses
             try:
                 return await self._responses_api(msgs)
             except httpx.HTTPStatusError as e:
                 if e.response is not None and e.response.status_code in (404, 405):
                     return await self._chat_completions(msgs)
                 raise
-        # Fallback dummy (dev sem custo)
         txt = (
             f"[DUMMY-{self.model}]\nSistema: {system_prompt}\n\n"
             f"Pergunta:\n{user_prompt}\n\n"

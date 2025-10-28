@@ -3,40 +3,52 @@ from sqlalchemy.orm import Session
 from app.auth.deps import get_db, get_current_user
 from pdfminer.high_level import extract_text
 import io
-from app.models.document import Document
+from app.models.tutor import TutorDocument
+from app.models.user import User
+
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
-MAX_MB = 10  # tamanho máximo do PDF (ajuste se quiser)
+MAX_MB = 10
 
-@router.post("/pdf")
-async def upload_pdf(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    user=Depends(get_current_user),
-):
-    if file.content_type not in ("application/pdf",):
-        raise HTTPException(status_code=400, detail="Envie um PDF (content-type application/pdf).")
+@router.post("/pdf-multi")
+async def upload_pdf_multi(files: list[UploadFile] = File(...), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if not files:
+        raise HTTPException(status_code=400, detail="Nenhum arquivo PDF recebido.")
 
-    data = await file.read()
-    if len(data) > MAX_MB * 1024 * 1024:
-        raise HTTPException(status_code=413, detail=f"Arquivo maior que {MAX_MB}MB.")
+    full_text = ""
+    count = 0
 
-    try:
-        text = extract_text(io.BytesIO(data)) or ""
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Falha ao extrair texto do PDF: {e}")
+    for file in files:
+        if file.content_type != "application/pdf":
+            raise HTTPException(status_code=400, detail=f"Arquivo '{file.filename}' não é PDF.")
 
-    title = (file.filename or "PDF sem nome").rsplit(".", 1)[0][:120]
+        data = await file.read()
+        if len(data) > MAX_MB * 1024 * 1024:
+            raise HTTPException(status_code=413, detail=f"{file.filename} maior que {MAX_MB}MB.")
 
-    # Cria um Documento com o texto extraído
-    doc = Document(user_id=user.id, title=title, content=text, language="pt-BR")
-    db.add(doc); db.commit(); db.refresh(doc)
+        try:
+            text = extract_text(io.BytesIO(data)) or ""
+        except Exception:
+            text = ""
+
+        if text.strip():
+            full_text += f"\n\n--- [PDF: {file.filename}] ---\n\n" + text
+            count += 1
+
+    if not full_text.strip():
+        raise HTTPException(status_code=422, detail="Nenhum texto pôde ser extraído.")
+
+    title = "PDFs Importados"
+    doc = TutorDocument(owner_id=user.id, title=title, content=full_text)
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
 
     return {
         "ok": True,
+        "count": count,
         "document_id": doc.id,
-        "title": doc.title,
-        "chars": len(text),
-        "text": text,
+        "chars": len(full_text),
+        "text": full_text,
     }

@@ -1,4 +1,3 @@
-# app/middleware/ratelimit.py
 import time
 import asyncio
 from collections import deque
@@ -23,7 +22,6 @@ class RateLimitMiddleware:
         self.key_func = key_func
         self.include_paths = tuple(include_path_prefixes)
 
-        # store: key -> deque[timestamps]
         self._buckets: dict[str, deque[float]] = {}
         self._lock = asyncio.Lock()
 
@@ -48,13 +46,11 @@ class RateLimitMiddleware:
                 q = deque()
                 self._buckets[key] = q
 
-            # purge antigo fora da janela
             cutoff = now - self.window
             while q and q[0] < cutoff:
                 q.popleft()
 
             if len(q) >= self.max_calls:
-                # quanto falta para liberar?
                 retry_after = max(1, int(q[0] + self.window - now))
                 resp = JSONResponse(
                     status_code=429,
@@ -76,10 +72,8 @@ class RateLimitMiddleware:
 
 def make_key_func(secret_key: str) -> Callable[[Request], str]:
     def _key(req: Request) -> str:
-        # IP remoto
         ip = req.client.host if req.client else "unknown"
 
-        # Tenta Bearer
         auth = req.headers.get("authorization", "")
         if auth.lower().startswith("bearer "):
             token = auth.split(" ", 1)[1].strip()

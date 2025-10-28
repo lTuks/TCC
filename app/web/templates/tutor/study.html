@@ -31,7 +31,7 @@
 
   <div class="card mt-4">
     {% if plan %}
-      <article class="prose" style="white-space: pre-wrap">{{ plan.plan_md }}</article>
+      <article class="prose max-w-none prose-pre-wrap">{{ rendered_md }}</article>
     {% else %}
       <p class="text-gray-600">Nenhum plano gerado ainda.</p>
     {% endif %}

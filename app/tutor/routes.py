@@ -8,7 +8,8 @@ from app.models.tutor import TutorDocument, TutorChatMessage, StudyPlan, Quiz, Q
 from app.models.user import User
 from app.tutor.study import create_study_plan_md, generate_quiz, grade_discursive_batch
 from app.llm.llm_gateway import summarize_to_bullets
-
+from markupsafe import Markup
+import markdown
 import json
 
 router = APIRouter(prefix="/tutor", tags=["tutor"])
@@ -67,7 +68,6 @@ def upload(
     if not content.strip():
         return RedirectResponse(url="/tutor", status_code=303)
 
-    # IMPORTANTE: amarrar ao dono
     doc = TutorDocument(owner_id=user.id, title=title or "Sem Título", content=content)
     db.add(doc); db.commit(); db.refresh(doc)
     return RedirectResponse(url=f"/tutor/doc/{doc.id}", status_code=303)
@@ -92,7 +92,7 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
         .outerjoin(QuizAttempt, QuizAttempt.quiz_id == Quiz.id)
         .filter(
             Quiz.document_id == doc_id,
-            Quiz.owner_id == user.id,            # <<--- Filtro de dono
+            Quiz.owner_id == user.id,
         )
         .group_by(Quiz.id)
         .order_by(Quiz.created_at.desc())
@@ -111,8 +111,8 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
         .join(Quiz, Quiz.id == QuizAttempt.quiz_id)
         .filter(
             Quiz.document_id == doc_id,
-            Quiz.owner_id == user.id,            # <<--- Filtro de dono
-            QuizAttempt.owner_id == user.id,     # <<--- Filtro de dono
+            Quiz.owner_id == user.id,
+            QuizAttempt.owner_id == user.id,
         )
         .order_by(QuizAttempt.created_at.desc())
         .all()
@@ -132,21 +132,43 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
     )
 
 # ----- Plano de estudo -----
+from markupsafe import Markup
+import markdown
+
 @router.get("/doc/{doc_id}/study", response_class=HTMLResponse)
-def study_get(request: Request, doc_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user),):
+def study_get(request: Request, doc_id: int,
+              db: Session = Depends(get_db),
+              user: User = Depends(get_current_user)):
+
     doc = _get_doc_user_safe(db, user.id, doc_id)
     if not doc:
         return RedirectResponse(url="/tutor", status_code=303)
+
     plan = (
         db.query(StudyPlan)
-        .filter(
-            StudyPlan.document_id == doc_id,
-            StudyPlan.owner_id == user.id,
-        )
+        .filter(StudyPlan.document_id == doc_id,
+                StudyPlan.owner_id == user.id)
         .order_by(StudyPlan.created_at.desc())
         .first()
     )
-    return templates.TemplateResponse("tutor/study.html", {"request": request, "doc": doc, "plan": plan})
+
+    rendered_md = None
+    if plan:
+        rendered_md = Markup(markdown.markdown(
+            plan.plan_md,
+            extensions=[
+                "fenced_code",
+                "tables",
+                "toc",
+                "nl2br",
+            ]
+        ))
+
+    return templates.TemplateResponse(
+        "tutor/study.html",
+        {"request": request, "doc": doc, "plan": plan,
+         "rendered_md": rendered_md}
+    )
 
 @router.post("/doc/{doc_id}/study", response_class=HTMLResponse)
 def study_post( request: Request, doc_id: int, horas_semanais: int = Form(6), semanas: int = Form(4), db: Session = Depends(get_db), user: User = Depends(get_current_user),):
@@ -217,7 +239,7 @@ def quiz_create(request: Request, doc_id: int, tipo: str = Form(...), n: int = F
 
     q = Quiz(
         document_id=doc_id,
-        owner_id=user.id,  # <- amarra ao dono
+        owner_id=user.id,
         quiz_type=payload["type"],
         items_json=json.dumps(payload["items"], ensure_ascii=False),
     )
@@ -273,7 +295,7 @@ async def quiz_submit(request: Request, quiz_id: int, db: Session = Depends(get_
     score10 = round((correct / total) * 10) if total else 0
     attempt = QuizAttempt(
         quiz_id=quiz_id,
-        owner_id=user.id,  # <- amarra ao dono
+        owner_id=user.id,
         answers_json=json.dumps(answers, ensure_ascii=False),
         score=score10,
         max_score=10,

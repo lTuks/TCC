@@ -6,16 +6,13 @@ import os
 class Base(DeclarativeBase):
     pass
 
-# Pega variável de ambiente ou .env
 url = settings.database_url or os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
-# Corrige URLs do Render
 if url.startswith("postgres://"):
     url = url.replace("postgres://", "postgresql+psycopg://", 1)
 elif url.startswith("postgresql://"):
     url = url.replace("postgresql://", "postgresql+psycopg://", 1)
 
-# Definir connect_args apenas para SQLite
 connect_args = {}
 if url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}

@@ -186,14 +186,15 @@ async function uploadPdfTutor() {
   const textArea = document.getElementById("input_text_tutor");
   if (msg) msg.textContent = "";
 
-  if (!inp || !inp.files || !inp.files[0]) {
-    if (msg) msg.textContent = "Selecione um arquivo PDF.";
+  if (!inp || !inp.files.length) {
+    msg.textContent = "Selecione pelo menos 1 arquivo PDF.";
     return;
   }
 
-  const file = inp.files[0];
   const fd = new FormData();
-  fd.append("file", file);
+  for (const file of inp.files) {
+    fd.append("files", file);
+  }
 
   const t = localStorage.getItem(tokenKey);
   const headers = {};
@@ -201,17 +202,23 @@ async function uploadPdfTutor() {
 
   await withGlobalLoading(async () => {
     try {
-      const res = await fetch(API + "/upload/pdf", { method: "POST", headers, body: fd });
+      const res = await fetch(API + "/upload/pdf-multi", {
+        method: "POST",
+        headers,
+        body: fd,
+      });
+
       if (!res.ok) {
-        const errText = await res.text();
-        if (msg) msg.textContent = "Falha ao importar: " + errText;
+        msg.textContent = "Erro ao importar PDFs.";
         return;
       }
+
       const data = await res.json();
-      if (textArea) textArea.value = data.text || "";
-      if (msg) msg.textContent = `Importado: ${data.title} (${data.chars} caracteres). Documento #${data.document_id}`;
+      textArea.value = data.text || "";
+      msg.textContent =
+        `Importado(s): ${data.count} PDF(s), total ${data.chars} caracteres. Documento #${data.document_id}`;
     } catch (e) {
-      if (msg) msg.textContent = "Erro de rede: " + e.message;
+      msg.textContent = "Erro: " + e.message;
     }
   });
 }

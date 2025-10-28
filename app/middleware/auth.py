@@ -18,7 +18,6 @@ def _get_token(request: Request) -> str | None:
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
-    # libera caminhos públicos
     if any(path == p or path.startswith(p) for p in PUBLIC_PATHS):
         return await call_next(request)
 
