@@ -27,14 +27,19 @@
 
 <div id="loading_overlay"
   class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-  <div class="book-loader" aria-hidden="true" title="Carregando">
-    <div class="cover cover-left"></div>
-    <div class="cover cover-right"></div>
-    <div class="page page-1"></div>
-    <div class="page page-2"></div>
-    <div class="page page-3"></div>
+  <div class="bookloader" role="status" aria-live="polite" aria-label="Carregando">
+    <span class="sr-only">Carregando…</span>
+    <div class="book">
+      <div class="cover left"></div>
+      <div class="cover right"></div>
+      <div class="page p1"></div>
+      <div class="page p2"></div>
+      <div class="page p3"></div>
+      <div class="page p4"></div>
+      <div class="page p5"></div>
+    </div>
+    <div class="book-shadow"></div>
   </div>
-  <span class="sr-only">Carregando…</span>
 </div>
 
 <link rel="stylesheet" href="/static/loading.css">
@@ -49,7 +54,7 @@
       </div>
     </nav>
   </header>
-  
+
   <main class="max-w-5xl mx-auto px-4 py-8 justify-items-center">
     {% block content %}{% endblock %}
   </main>
