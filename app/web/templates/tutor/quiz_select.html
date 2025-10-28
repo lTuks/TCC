@@ -5,10 +5,20 @@
     <h1 class="text-xl font-semibold">Gerar prova - {{ doc.title }}</h1>
     <a class="btn btn-ghost" href="/tutor">Voltar</a>
   </div>
+
   <div class="card mt-4">
-    <p class="text-sm text-gray-500">Gere a quantidade de provas que preferir, entre as 3 opções disponiveis.</p>
-    <p class="text-sm text-gray-500">É possivel refazer a mesma prova gerada quantas vezes quiser.</p>
-    <form action="/tutor/doc/{{ doc.id }}/quiz/create" method="post" class="flex gap-3 items-end">
+    <div class="flex items-center gap-2">
+      <h3 class="font-semibold mb-2">Gerar Provas</h3>
+      <div class="relative group cursor-pointer select-none">
+        <span class="text-blue-600 font-bold border border-blue-600 rounded-full px-[6px]">?</span>
+        <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block
+                    bg-gray-900 text-white text-xs p-2 rounded shadow-lg w-64 z-10">
+          Gere quantas provas desejar entre as 3 opções disponíveis.
+          Você pode refazer suas provas quantas vezes desejar.
+        </div>
+      </div>
+    </div>
+    <form action="/tutor/doc/{{ doc.id }}/quiz/create" method="post" class="flex gap-3 items-end mt-2">
       <label>Tipo
         <select class="input" name="tipo">
           <option value="vf">Verdadeiro/Falso</option>
@@ -16,8 +26,9 @@
           <option value="disc">Discursivas</option>
         </select>
       </label>
-      <label>Qtd. questões <input class="input" type="number" min="3" max="30" value="10" name="n"
-          style="width:6rem"></label>
+      <label>Qtd. questões
+        <input class="input" type="number" min="3" max="30" value="10" name="n" style="width:6rem">
+      </label>
       <button class="btn btn-ghost">Gerar</button>
     </form>
   </div>

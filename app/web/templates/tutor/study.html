@@ -7,12 +7,24 @@
   </div>
   
   <div class="card mt-4">
+    <div class="flex items-center gap-2">
+      <h3 class="font-semibold mb-2">Plano de Estudo</h3>
+        <div class="relative group cursor-pointer select-none">
+        <span class="text-blue-600 font-bold border border-blue-600 rounded-full px-[6px]">?</span>
+        <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block
+                    bg-gray-900 text-white text-xs p-2 rounded shadow-lg w-64 z-10">
+          Selecione quantas horas por semana deseja estudar e em quantas semanas será seu estudo para gerar o plano.
+          Se já existir um plano, o novo substituirá o anterior.
+        </div>
+      </div>
+    </div>
     <form method="post" class="flex gap-2 mt-2">
-      <p class="text-sm text-gray-500">Selecione quantas horas por semana deseja estudar e em quantas semanas será seu estudo, para o plano ser gerado.</p>
-      <p class="text-sm text-gray-500">Se já possue um plano gerado, o proximo plano irá subistituir seu plano anterior.</p>
-      <label>Horas/semana <input class="input" type="number" name="horas_semanais" value="6" min="1"
-          style="width:6rem"></label>
-      <label>Semanas <input class="input" type="number" name="semanas" value="4" min="1" style="width:6rem"></label>
+      <label>Horas/semana
+        <input class="input" type="number" name="horas_semanais" value="6" min="1" style="width:6rem">
+      </label>
+      <label>Semanas
+        <input class="input" type="number" name="semanas" value="4" min="1" style="width:6rem">
+      </label>
       <button class="btn btn-ghost">Gerar/Atualizar</button>
     </form>
   </div>

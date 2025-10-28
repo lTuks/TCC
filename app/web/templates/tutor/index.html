@@ -7,12 +7,20 @@
 
   <!-- Importar PDF -->
   <div class="card mt-4">
-    <h3 class="font-semibold mb-2">Importar PDF</h3>
-    <p class="text-sm text-gray-500">Use para importar o arquivo, que aparecerá no bloco abaixo em forma de texto.</p>
-    <input id="pdf_file_tutor" type="file" accept="application/pdf" class="input" />
-    <button class="btn btn-ghost mt-2" onclick="uploadPdfTutor()">Ler PDF</button>
-    <p id="pdf_msg_tutor" class="text-sm text-gray-600 mt-1"></p>
+    <div class="flex items-center gap-2">
+      <h3 class="font-semibold mb-2">Importar PDF</h3>
+      <div class="relative group cursor-pointer select-none">
+        <span class="text-blue-600 font-bold border border-blue-600 rounded-full px-[6px]">?</span>
+        <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block
+                    bg-gray-900 text-white text-xs p-2 rounded shadow-lg w-56 z-10">
+          Use para importar o arquivo, que aparecerá no bloco abaixo em forma de texto.
+        </div>
+      </div>
   </div>
+  <input id="pdf_file_tutor" type="file" accept="application/pdf" class="input mt-2" />
+  <button class="btn btn-ghost mt-2" onclick="uploadPdfTutor()">Ler PDF</button>
+  <p id="pdf_msg_tutor" class="text-sm text-gray-600 mt-1"></p>
+</div>
 
   <!-- Form de criação manual de documento -->
   <div class="card mt-4">
