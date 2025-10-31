@@ -26,7 +26,7 @@ function notifyAuthChanged() {
 
 let __loading = false;
 let __loadingSince = 0;
-let __minDelay = 400; // ms
+let __minDelay = 400; 
 const overlay = document.getElementById("loading_overlay");
 
 function __reallyHide() {
@@ -80,8 +80,25 @@ document.addEventListener("submit", (evt) => {
     evt.preventDefault();
     return;
   }
+
+  const form = evt.target;
+
+  const requireName = form?.dataset?.requireOneOf;
+  if (requireName) {
+    const sel = `input[name="${requireName}"]`;
+    const inputs = form.querySelectorAll(sel);
+    const anyChecked = Array.from(inputs).some(i => i.checked);
+    if (!anyChecked) {
+      evt.preventDefault();
+      evt.stopPropagation();
+      alert("Selecione pelo menos um tipo de questão.");
+      return;
+    }
+  }
   showLoading(400);
 }, true);
+
+
 
 document.addEventListener("click", (evt) => {
   const el = evt.target.closest("a, button");
@@ -114,7 +131,6 @@ window.showLoading = showLoading;
 window.hideLoading = hideLoading;
 window.withGlobalLoading = withGlobalLoading;
 
-
 async function api(path, method = "GET", body = null, { useLoading = true } = {}) {
   const run = async () => {
     const headers = { "Content-Type": "application/json" };
@@ -135,7 +151,6 @@ async function api(path, method = "GET", body = null, { useLoading = true } = {}
   return useLoading ? withGlobalLoading(run) : run();
 }
 
-
 async function login() {
   const email = document.getElementById("login_email")?.value?.trim() ?? "";
   const password = document.getElementById("login_pass")?.value ?? "";
@@ -148,7 +163,6 @@ async function login() {
     notifyAuthChanged();
     window.location.href = "/tutor";
   } catch (e) {
-    hideLoading();
     if (msg) msg.textContent = "Falha ao entrar: " + e.message;
   }
 }
@@ -175,7 +189,6 @@ async function registerUser() {
     notifyAuthChanged();
     window.location.href = "/tutor";
   } catch (e) {
-    hideLoading();
     if (msg) msg.textContent = "Falha ao cadastrar: " + e.message;
   }
 }
@@ -187,7 +200,7 @@ async function uploadPdfTutor() {
   if (msg) msg.textContent = "";
 
   if (!inp || !inp.files.length) {
-    msg.textContent = "Selecione pelo menos 1 arquivo PDF.";
+    if (msg) msg.textContent = "Selecione pelo menos 1 arquivo PDF.";
     return;
   }
 
@@ -209,16 +222,17 @@ async function uploadPdfTutor() {
       });
 
       if (!res.ok) {
-        msg.textContent = "Erro ao importar PDFs.";
+        const errText = await res.text();
+        if (msg) msg.textContent = "Falha ao importar PDFs: " + errText;
         return;
       }
 
       const data = await res.json();
-      textArea.value = data.text || "";
-      msg.textContent =
+      if (textArea) textArea.value = data.text || "";
+      if (msg) msg.textContent =
         `Importado(s): ${data.count} PDF(s), total ${data.chars} caracteres. Documento #${data.document_id}`;
     } catch (e) {
-      msg.textContent = "Erro: " + e.message;
+      if (msg) msg.textContent = "Erro: " + e.message;
     }
   });
 }

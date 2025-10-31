@@ -5,6 +5,7 @@ from pdfminer.high_level import extract_text
 import io, re
 from app.models.tutor import TutorDocument
 from app.models.user import User
+import json
 
 
 router = APIRouter(prefix="/upload", tags=["upload"])
@@ -24,21 +25,42 @@ def _clean_pdf_text(raw: str) -> str:
 
     return raw.strip()
 
+# app/uploads/routes.py
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
+from sqlalchemy.orm import Session
+from app.auth.deps import get_db, get_current_user
+from app.models.tutor import TutorDocument
+import io, json
+from pdfminer.high_level import extract_text
+
+router = APIRouter(prefix="/upload", tags=["upload"])
+
+MAX_MB = 10
+
+def _clean_pdf_text(s: str) -> str:
+    import re
+    s = s.replace("\x0c", "\n").replace("\r", " ")
+    s = re.sub(r"[ \t]+", " ", s)
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    return s.strip()
+
 @router.post("/pdf-multi")
 async def upload_pdf_multi(
     files: list[UploadFile] = File(...),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user = Depends(get_current_user),
 ):
     if not files:
         raise HTTPException(status_code=400, detail="Nenhum arquivo PDF recebido.")
 
-    merged = []
+    merged_chunks: list[str] = []
+    sources: list[str] = []
     count = 0
 
     for f in files:
         if f.content_type != "application/pdf":
             raise HTTPException(status_code=400, detail=f"Arquivo '{f.filename}' não é PDF.")
+
         data = await f.read()
         if len(data) > MAX_MB * 1024 * 1024:
             raise HTTPException(status_code=413, detail=f"{f.filename} maior que {MAX_MB}MB.")
@@ -50,16 +72,24 @@ async def upload_pdf_multi(
 
         cleaned = _clean_pdf_text(raw)
         if cleaned:
-            merged.append(cleaned)
+            merged_chunks.append(cleaned)
+            sources.append(f.filename or "sem_nome.pdf")
             count += 1
 
-    if not merged:
+    if not merged_chunks:
         raise HTTPException(status_code=422, detail="Nenhum texto pôde ser extraído.")
 
-    full_text = "\n\n".join(merged)
+    full_text = "\n\n".join(merged_chunks)
 
-    doc = TutorDocument(owner_id=user.id, title="PDFs Importados", content=full_text)
-    db.add(doc); db.commit(); db.refresh(doc)
+    doc = TutorDocument(
+        owner_id=user.id,
+        title="PDFs Importados",
+        content=full_text,
+        sources_json=json.dumps(sources, ensure_ascii=False),
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
 
     return {
         "ok": True,

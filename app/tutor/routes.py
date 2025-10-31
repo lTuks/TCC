@@ -10,7 +10,10 @@ from app.tutor.study import create_study_plan_md, generate_quiz, grade_discursiv
 from app.llm.llm_gateway import summarize_to_bullets
 from markupsafe import Markup
 import markdown
+from app.tutor.refs import refs_md, get_refs
 import json
+from typing import Optional, List, Annotated
+
 
 router = APIRouter(prefix="/tutor", tags=["tutor"])
 templates = Jinja2Templates(directory="app/web/templates")
@@ -79,6 +82,7 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
         return RedirectResponse(url="/tutor", status_code=303)
 
     summary = summarize_to_bullets(doc.content, bullets=10)
+    refs = refs_md(doc)
 
     quiz_stats = (
         db.query(
@@ -128,6 +132,7 @@ def doc_detail(request: Request, doc_id: int, db: Session = Depends(get_db), use
             "quiz_stats": quiz_stats,
             "attempt_rows": attempt_rows,
             "type_labels": type_labels,
+            "refs": refs,
         },
     )
 
@@ -171,6 +176,7 @@ def study_post( request: Request, doc_id: int, horas_semanais: int = Form(6), se
     if not doc:
         return RedirectResponse(url="/tutor", status_code=303)
     md = create_study_plan_md(doc.content, horas_semanais=horas_semanais, semanas=semanas)
+    md = md + refs_md(doc)
     row = StudyPlan(document_id=doc_id, owner_id=user.id, plan_md=md)
     db.add(row)
     db.commit()
@@ -222,20 +228,85 @@ def quiz_select(request: Request, doc_id: int, db: Session = Depends(get_db), us
     )
 
 @router.post("/doc/{doc_id}/quiz/create", response_class=HTMLResponse)
-def quiz_create(request: Request, doc_id: int, tipo: str = Form(...), n: int = Form(10),
-                db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def quiz_create(
+    request: Request,
+    doc_id: int,
+    n: int = Form(10),
+    tipos: Annotated[Optional[List[str]], Form()] = None,   # <= opcional
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     doc = _get_doc_user_safe(db, user.id, doc_id)
     if not doc:
         return RedirectResponse(url="/tutor", status_code=303)
 
-    if tipo not in ("vf", "mc", "disc"):
-        tipo = "mc"
-    payload = generate_quiz(doc.content, quiz_type=tipo, n=n)
+    tipos = [t for t in (tipos or []) if t in ("vf", "mc", "disc")]
+    if not tipos:
+        quiz_stats = (
+            db.query(
+                Quiz.id.label("quiz_id"),
+                Quiz.quiz_type.label("quiz_type"),
+                Quiz.created_at.label("created_at"),
+                func.count(QuizAttempt.id).label("attempts"),
+                func.coalesce(func.avg(QuizAttempt.score), 0).label("avg_score"),
+                func.coalesce(func.max(QuizAttempt.score), 0).label("best_score"),
+            )
+            .outerjoin(QuizAttempt, QuizAttempt.quiz_id == Quiz.id)
+            .filter(Quiz.document_id == doc_id, Quiz.owner_id == user.id)
+            .group_by(Quiz.id)
+            .order_by(Quiz.created_at.desc())
+            .all()
+        )
+        attempt_rows = (
+            db.query(
+                QuizAttempt.id.label("attempt_id"),
+                QuizAttempt.created_at.label("attempt_at"),
+                QuizAttempt.score.label("score"),
+                QuizAttempt.max_score.label("max_score"),
+                Quiz.quiz_type.label("quiz_type"),
+                Quiz.id.label("quiz_id"),
+            )
+            .join(Quiz, Quiz.id == QuizAttempt.quiz_id)
+            .filter(Quiz.document_id == doc_id, Quiz.owner_id == user.id, QuizAttempt.owner_id == user.id)
+            .order_by(QuizAttempt.created_at.desc())
+            .all()
+        )
+        type_labels = {"vf": "Verdadeiro/Falso", "mc": "Alternativas", "disc": "Discursiva"}
+        return templates.TemplateResponse(
+            "tutor/quiz_select.html",
+            {
+                "request": request,
+                "doc": doc,
+                "quiz_stats": quiz_stats,
+                "attempt_rows": attempt_rows,
+                "type_labels": type_labels,
+                "flash_error": "Selecione pelo menos um tipo de questão.",
+            },
+            status_code=400,
+        )
+
+    if len(tipos) == 1:
+        payload = generate_quiz(doc.content, quiz_type=tipos[0], n=n)
+        qtype = tipos[0]
+    else:
+        por_tipo = max(1, n // len(tipos))
+        restante = n
+        items = []
+        for t in tipos:
+            p = generate_quiz(doc.content, quiz_type=t, n=por_tipo)
+            take = p["items"][:min(por_tipo, restante)]
+            items.extend(take)
+            restante -= len(take)
+        if restante > 0:
+            extra = generate_quiz(doc.content, quiz_type=tipos[0], n=restante)
+            items.extend(extra["items"][:restante])
+        payload = {"type": "mixed:" + ",".join(tipos), "items": items}
+        qtype = payload["type"]
 
     q = Quiz(
         document_id=doc_id,
         owner_id=user.id,
-        quiz_type=payload["type"],
+        quiz_type=qtype,
         items_json=json.dumps(payload["items"], ensure_ascii=False),
     )
     db.add(q); db.commit(); db.refresh(q)
@@ -248,9 +319,10 @@ def quiz_take(request: Request, quiz_id: int, db: Session = Depends(get_db), use
         return RedirectResponse(url="/tutor", status_code=303)
     items = json.loads(quiz.items_json)
     doc = _get_doc_user_safe(db, user.id, quiz.document_id)
+    refs = get_refs(doc)
     if not doc:
         return RedirectResponse(url="/tutor", status_code=303)
-    return templates.TemplateResponse("tutor/quiz_take.html", {"request": request, "quiz": quiz, "items": items, "doc": doc})
+    return templates.TemplateResponse("tutor/quiz_take.html", {"request": request, "quiz": quiz, "items": items, "doc": doc, "refs": refs})
 
 @router.post("/quiz/{quiz_id}/submit", response_class=HTMLResponse)
 async def quiz_submit(request: Request, quiz_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
@@ -274,7 +346,7 @@ async def quiz_submit(request: Request, quiz_id: int, db: Session = Depends(get_
 
     correct, total = 0, len(items)
     disc_scores = []
-    if quiz.quiz_type in ("vf", "mc"):
+    if "disc" not in quiz.quiz_type:
         for it, ans in zip(items, answers):
             if it["type"] == "vf" and ans is not None and bool(ans) == bool(it["answer"]):
                 correct += 1
@@ -282,6 +354,7 @@ async def quiz_submit(request: Request, quiz_id: int, db: Session = Depends(get_
                 correct += 1
     else:
         doc = _get_doc_user_safe(db, user.id, quiz.document_id)
+        refs = get_refs(doc)
         if not doc:
             return RedirectResponse(url="/tutor", status_code=303)
         disc_scores = grade_discursive_batch(doc.content, items, answers)

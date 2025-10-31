@@ -8,6 +8,7 @@ class TutorDocument(Base):
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)  
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
+    sources_json = Column(Text, default="[]")
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

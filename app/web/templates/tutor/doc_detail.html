@@ -11,6 +11,12 @@
     <ol class="list-decimal pl-5">
       {% for s in summary %}<li>{{ s }}</li>{% endfor %}
     </ol>
+    {% if refs %}
+    <div class="card mt-4">
+      <h2 class="text-lg font-semibold">Referências</h2>
+      <article class="prose prose-wrap">{{ refs }}</article>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

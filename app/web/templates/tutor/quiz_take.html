@@ -40,6 +40,16 @@
         <button class="btn btn-ghost">Enviar prova</button>
       </div>
     </form>
+    {% if refs and refs|length %}
+    <div class="prose max-w-none mt-6">
+      <h3>Referências</h3>
+      <ul>
+        {% for r in refs %}
+        <li>{{ r }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
