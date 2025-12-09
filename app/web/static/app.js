@@ -230,7 +230,7 @@ async function uploadPdfTutor() {
 
       const data = await res.json();
       if (textArea) textArea.value = data.text || "";
-      if (sources) sources.value = data.sources.join("\n");
+      if (sources) sources.value = JSON.stringify(data.sources || []);
       if (msg) msg.textContent =
         `Importado(s): ${data.count} PDF(s), total ${data.chars} caracteres. Documento #${data.document_id}`;
     } catch (e) {

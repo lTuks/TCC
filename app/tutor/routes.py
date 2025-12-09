@@ -72,7 +72,16 @@ def upload(
     if not content.strip():
         return RedirectResponse(url="/tutor", status_code=303)
 
-    doc = TutorDocument(owner_id=user.id, title=title or "Sem Título", content=content, sources_json=sources)
+    try:
+        parsed_sources = json.loads(sources)
+        if not isinstance(parsed_sources, list):
+            parsed_sources = [parsed_sources]
+    except Exception:
+        parsed_sources = [sources]
+
+    sources_json = json.dumps(parsed_sources, ensure_ascii=False)
+
+    doc = TutorDocument(owner_id=user.id, title=title or "Sem Título", content=content, sources_json=sources_json)
     db.add(doc); db.commit(); db.refresh(doc)
     return RedirectResponse(url=f"/tutor/doc/{doc.id}", status_code=303)
 
