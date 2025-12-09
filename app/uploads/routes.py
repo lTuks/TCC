@@ -81,20 +81,10 @@ async def upload_pdf_multi(
 
     full_text = "\n\n".join(merged_chunks)
 
-    doc = TutorDocument(
-        owner_id=user.id,
-        title="PDFs Importados",
-        content=full_text,
-        sources_json=json.dumps(sources, ensure_ascii=False),
-    )
-    db.add(doc)
-    db.commit()
-    db.refresh(doc)
-
     return {
         "ok": True,
         "count": count,
-        "document_id": doc.id,
         "chars": len(full_text),
         "text": full_text,
+        "sources": sources,
     }
