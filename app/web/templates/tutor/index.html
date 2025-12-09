@@ -38,7 +38,7 @@
     <form action="{{ request.url_for('upload') }}" method="post" enctype="multipart/form-data" class="space-y-2">
       <input class="input" name="title" placeholder="Título" />
       <textarea id="input_text_tutor" class="input h-48" name="text" placeholder="Cole o conteúdo aqui"></textarea>
-      <input id="sources_tutor" class="invisible" name="sources" />
+      <input id="sources_tutor" class="hidden" name="sources" />
       <button class="btn btn-ghost mt-2">Enviar</button>
     </form>
   </div>
