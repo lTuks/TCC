@@ -57,6 +57,7 @@ def upload(
     request: Request,
     title: str = Form(...),
     text: str = Form(""),
+    sources: str = Form(""),
     file: UploadFile | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -71,7 +72,7 @@ def upload(
     if not content.strip():
         return RedirectResponse(url="/tutor", status_code=303)
 
-    doc = TutorDocument(owner_id=user.id, title=title or "Sem Título", content=content)
+    doc = TutorDocument(owner_id=user.id, title=title or "Sem Título", content=content, sources_json=sources)
     db.add(doc); db.commit(); db.refresh(doc)
     return RedirectResponse(url=f"/tutor/doc/{doc.id}", status_code=303)
 

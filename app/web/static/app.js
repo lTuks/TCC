@@ -197,6 +197,7 @@ async function uploadPdfTutor() {
   const inp = document.getElementById("pdf_file_tutor");
   const msg = document.getElementById("pdf_msg_tutor");
   const textArea = document.getElementById("input_text_tutor");
+  const sources = document.getElementById("sources_tutor");
   if (msg) msg.textContent = "";
 
   if (!inp || !inp.files.length) {
@@ -229,6 +230,7 @@ async function uploadPdfTutor() {
 
       const data = await res.json();
       if (textArea) textArea.value = data.text || "";
+      if (sources) sources.value = data.sources.join("\n");
       if (msg) msg.textContent =
         `Importado(s): ${data.count} PDF(s), total ${data.chars} caracteres. Documento #${data.document_id}`;
     } catch (e) {
