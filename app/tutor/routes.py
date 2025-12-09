@@ -57,7 +57,7 @@ def upload(
     request: Request,
     title: str = Form(...),
     text: str = Form(""),
-    sources: str = Form(""),
+    sources: str = Form("[]"),
     file: UploadFile | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
